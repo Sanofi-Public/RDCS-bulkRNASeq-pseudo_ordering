@@ -5,7 +5,6 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
 
 
 class pseudo_ordering:
@@ -196,6 +195,21 @@ class pseudo_ordering:
         z_mat[:, sample_index] = z_dash_vec
 
         return np.corrcoef(z_mat, clinical_vec)[:-1, -1]
+    
+    
+    def normpdf(self, mean, sd, x):
+        """
+        Computes the normal pdf for a given observation
+        Input:
+            - Mean vector
+            - Standard devation vector
+            - Observation vector
+        """
+        var = sd**2
+        denom = (2*np.pi*var)**.5
+        num = np.exp(-(x-mean)**2/(2*var))
+        return num/denom
+
 
     def compute_likelihood(self, y_vec, sample_index, z_mean, z_sd):
         """
@@ -213,7 +227,9 @@ class pseudo_ordering:
         # lkl_smp_mat = np.empty([z_mean.shape[0], z_mean.shape[1]]) # Likelihood of the datapoint coming from each curve
         lkl_smp = np.empty(z_mean.shape[1])
         for i in range(0, z_mean.shape[1]):
-            lkl_vec = norm(z_mean[:, i], z_sd[:, i]).pdf(y_vec[:, sample_index])
+            #lkl_vec = norm(z_mean[:, i], z_sd[:, i]).pdf(y_vec[:, sample_index])            
+            lkl_vec = self.normpdf(y_vec[:, sample_index], z_mean[:, i], z_sd[:, i])
+            
             # Set any value greater than 1 to 1
             lkl_vec[lkl_vec > 1] = 1
             # Ignore very low probabilities, extract > 20 percentile values
